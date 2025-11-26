@@ -5,7 +5,6 @@
 
 # BlueJ project metadata
 *.ctxt
-package.bluej
 
 # GridWorld library (downloaded locally)
 gridworld.jar
