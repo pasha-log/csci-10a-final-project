@@ -1,0 +1,33 @@
+# Java build artifacts
+*.class
+*.jar
+*.zip
+
+# BlueJ project metadata
+*.ctxt
+package.bluej
+
+# GridWorld library (downloaded locally)
+gridworld.jar
+GridWorldCode.zip
+
+# IDE/editor files
+*.swp
+*.swo
+*.tmp
+*~
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# If you have images generated at runtime (e.g., *.gif exports), ignore them:
+# *.gif
+
+# Keep source and scripts
+!.java
+!run.sh
+!README.md
