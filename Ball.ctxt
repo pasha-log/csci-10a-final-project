@@ -1,0 +1,16 @@
+#BlueJ class context
+comment0.target=Ball
+comment0.text=\r\n\ The\ ball\ that\ is\ bounced\ back\ and\ forth\ between\ paddles.\r\n\r\n\ @author\ Pasha\ Loguinov\r\n\ @version\ 10/25/2025\r\n\ \r\n\ Has\ a\ starting\ point.\ \r\n\ Gets\ shot\ towards\ player\ one's\ direction\ dead-on\ to\ start\ the\ game.\r\n\ Define\ the\ out\ of\ bounds\ coordinates\ on\ each\ side\ to\ determine\ who\ loses\ the\ round.\r\n\ If\ the\ ball\ comes\ in\ "contact"\ with\ with\ a\ paddle\ perpendicularly,\ the\ ball\ gets\ returned\ perpedicularly.\r\n\ If\ the\ ball\ comes\ in\ contact\ diagonally,\ \ \r\n\ \r\n\ Add\ continuous\ position\ fields\ (x,y,vx,vy)\ and\ a\ simple\ act()\ that\ moves\ the\ ball\ and\ updates\ its\ grid\ cell\u2014no\ collisions.\r\n\ Add\ top/bottom\ wall\ collision.\r\n\ Implement\ paddle\ collision\ with\ simple\ vx\ inversion\ only.\r\n\ Add\ offset\ shaping\ of\ vy.\r\n\ Add\ spin\ from\ paddle\ movement\ delta.\r\n\ Add\ speed\ increases,\ min\ horizontal\ enforcement.\r\n\ Add\ scoring\ and\ reset\ logic.\r\n\ Add\ sub-step\ refinement\ for\ higher\ speeds.\r\n\ Add\ small\ vertical\ perturbation\ to\ avoid\ flat\ rallies.\r\n
+comment1.params=world\ grid\ row\ column\ leftPaddle\ rightPaddle
+comment1.target=Ball(info.gridworld.actor.ActorWorld,\ info.gridworld.grid.Grid,\ int,\ int,\ Paddle,\ Paddle)
+comment2.params=
+comment2.target=void\ act()
+comment3.params=paddle
+comment3.target=void\ changeVerticalDirectionPolarity(Paddle)
+comment4.params=
+comment4.target=boolean\ wasTheLeftPaddleHit()
+comment5.params=
+comment5.target=boolean\ wasTheRightPaddleHit()
+comment6.params=
+comment6.target=boolean\ wasVerticalWallHit()
+numComments=7
