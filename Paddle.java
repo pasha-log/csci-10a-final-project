@@ -1,26 +1,21 @@
 import info.gridworld.actor.ActorWorld;
 import info.gridworld.grid.Grid;
 import info.gridworld.grid.Location;
-import java.awt.Color;
 
-/**
- * Paddles that move up and down and react with the pong ball.
- *
- * @author Pasha Loguinov
- * @version 10/25/2025
+/** 
+ * This is the Paddle class that creates the paddles of each player.
  */
-public class Paddle
-{
+public class Paddle {
     private ActorWorld world;
     private Grid grid;
-    private BlackSquare paddleSegmentTop = new BlackSquare(Color.BLACK);
-    private BlackSquare paddleSegmentCenter = new BlackSquare(Color.BLACK);
-    private BlackSquare paddleSegmentBottom = new BlackSquare(Color.BLACK);
-    private int topRow = 19;
-    private int centerRow = 20;
-    private int bottomRow = 21;
+    private BlackSquare paddleSegmentTop = new BlackSquare();
+    private BlackSquare paddleSegmentCenter = new BlackSquare();
+    private BlackSquare paddleSegmentBottom = new BlackSquare();
+    private int topRow = 24;
+    private int centerRow = 25;
+    private int bottomRow = 26;
     private int column;
-
+    
     public Paddle (ActorWorld world, Grid grid, int column) {
         this.world = world;
         this.grid = grid;
@@ -32,10 +27,11 @@ public class Paddle
         paddleSegmentCenter.moveTo(new Location(centerRow, column));
         paddleSegmentBottom.moveTo(new Location(bottomRow, column));
     }
-
+    
+    // Moves the paddle up or down depending on goUp using the pre-decrement/pre-increment operators
     public void movePaddleSegmentsUpDown(Boolean goUp) {
         if (goUp) {
-            if (grid.isValid(new Location(topRow - 1, column))) {
+            if (grid.isValid(new Location(topRow - 1, column)) && topRow > 5) {
                 paddleSegmentTop.moveTo(new Location(--topRow, column));
                 paddleSegmentCenter.moveTo(new Location(--centerRow, column));
                 paddleSegmentBottom.moveTo(new Location(--bottomRow, column));

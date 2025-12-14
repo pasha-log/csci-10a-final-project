@@ -2,95 +2,122 @@ import info.gridworld.actor.ActorWorld;
 import info.gridworld.actor.Actor; 
 import info.gridworld.grid.Grid;
 import info.gridworld.grid.Location;
-import java.awt.Color;
 
-/**
- * The ball that is bounced back and forth between paddles.
- *
- * @author Pasha Loguinov
- * @version 10/25/2025
- * 
+/** 
+ * This is the Ball Actor class that controls the behavior of the pong ball.
  */
-public class Ball extends Actor
-{
+public class Ball extends Actor {
     private ActorWorld world;
     private Grid grid;
-    private int row;
-    private int column;
-    private int horizontalDirection = -1;
-    private int verticalDirection = 0;
-    private Paddle leftPaddle;
-    private Paddle rightPaddle;
+    private double rowFloat;
+    private double columnFloat;
+    private double startingAngle;
+    private double speed = 3.0;
+    private double horizontalVelocity;
+    private double verticalVelocity;
+    private int numberOfRows;
+    private int numberOfColumns;
+    private Paddle paddleOne;
+    private Paddle paddleTwo;
+    private boolean pointIsScored = false;
+    private PongWorld pongWorld;
 
-    public Ball (ActorWorld world, Grid grid, int row, int column, Paddle leftPaddle, Paddle rightPaddle) {
+    public Ball (PongWorld pongWorld, ActorWorld world, Grid grid, double rowFloat, double columnFloat, double startingAngle, Paddle paddleOne, Paddle paddleTwo) {
+        this.pongWorld = pongWorld;
         this.world = world;
         this.grid = grid;
-        this.row = row;
-        this.column = column;
-        this.leftPaddle = leftPaddle;
-        this.rightPaddle = rightPaddle;
+        this.numberOfRows = grid.getNumRows();
+        this.numberOfColumns = grid.getNumCols();
+        this.rowFloat = rowFloat;
+        this.columnFloat = columnFloat;
+        this.startingAngle = startingAngle;
+        computeVelocities(startingAngle, 1);
+        this.paddleOne = paddleOne;
+        this.paddleTwo = paddleTwo;
         world.add(this);
-        this.moveTo(new Location(row, column));
+        this.moveTo(new Location((int)Math.round(rowFloat), (int)Math.round(columnFloat)));
     }
-
+    
+    // The act method that repeats every tick (determines next row/column in path, inverses the rise/run depending on the collision type, and updates score if ball passes paddle)
     public void act() {
-        if (column < 2 || column > 58) return;
+        if (!pointIsScored) {
+            double nextRowFloat = rowFloat + verticalVelocity;
+            double nextColumnFloat = columnFloat + horizontalVelocity;
+            if (willHitCorner(nextRowFloat, nextColumnFloat)) {
+                verticalVelocity = -verticalVelocity;
+                nextRowFloat = rowFloat + verticalVelocity;
+                horizontalVelocity = -horizontalVelocity;
+                nextColumnFloat = columnFloat + horizontalVelocity;
+            } else if (willHitLeftOrRight(nextColumnFloat) || willHitLeftPaddle(nextRowFloat, nextColumnFloat) || willHitRightPaddle(nextRowFloat, nextColumnFloat)) {
+                horizontalVelocity = -horizontalVelocity;
 
-        int nextRow = row + verticalDirection;
-        int nextColumn = column + horizontalDirection;
-        boolean willHitVerticalWall = willHitVerticalWall(nextRow);
-        boolean willHitLeftPaddle = willHitLeftPaddle(nextRow, nextColumn);
-        boolean willHitRightPaddle = willHitRightPaddle(nextRow, nextColumn);
+                if (willHitLeftPaddle(nextRowFloat, nextColumnFloat)) nextColumnFloat = 2;
 
-        if (willHitVerticalWall && (willHitLeftPaddle || willHitRightPaddle)) { // Hitting a corner
-            System.out.println("We hit a corner!");
-            horizontalDirection = -horizontalDirection;
-            verticalDirection = (Math.random() < .5) ? 0 : -verticalDirection;
-            nextRow = row + verticalDirection;
-            nextColumn = column + horizontalDirection;
-        } else if (willHitVerticalWall) { // Hitting a wall
-            System.out.println("We hit a wall!");
-            verticalDirection = (verticalDirection < 0) ? 1 : -1; 
-            nextRow = row + verticalDirection;
-            nextColumn = column + horizontalDirection;
-        } else if (willHitLeftPaddle || willHitRightPaddle) { // Hitting one of the paddles
-            System.out.println("We hit a paddle!");
-            if (willHitLeftPaddle) {
-                System.out.println("We hit the left paddle!");
-                changeVerticalDirectionPolarity(nextRow, leftPaddle);
-                horizontalDirection = 1;
-                nextRow = row + verticalDirection;
-                nextColumn = column + horizontalDirection;
-            } else if (willHitRightPaddle) {
-                System.out.println("We hit the right paddle!");
-                changeVerticalDirectionPolarity(nextRow, rightPaddle);
-                horizontalDirection = -1;
-                nextRow = row + verticalDirection;
-                nextColumn = column + horizontalDirection;
+                if (willHitRightPaddle(nextRowFloat, nextColumnFloat)) nextColumnFloat = 67;
+                
+                if (nextColumnFloat < 0 || nextColumnFloat > numberOfColumns - 1) pointIsScored = true;
+            } else if (willHitTopOrBottom(nextRowFloat)) {
+                verticalVelocity = -verticalVelocity;
+                nextRowFloat = rowFloat + verticalVelocity;
             }
-        }
 
-        column = nextColumn;
-        row = nextRow;
-        this.moveTo(new Location(row, column));
+            rowFloat = nextRowFloat;
+            columnFloat = nextColumnFloat;
+            if (!pointIsScored) {
+                this.moveTo(new Location((int)Math.round(rowFloat), (int)Math.round(columnFloat)));
+            } else {
+                if (nextColumnFloat < 0) pongWorld.updateScoreBoard(2); else pongWorld.updateScoreBoard(1);
+                pointIsScored = false;
+            }
+        } 
+    }
+    
+    // Checks whether the ball will hit the top or bottom of the game grid in its next position
+    private boolean willHitTopOrBottom(double nextRowFloat) {
+        return nextRowFloat < 5 || nextRowFloat > (numberOfRows - 1);
+    }
+    
+    // Checks whether the ball will hit the right or left sides of the game grid in its next position
+    private boolean willHitLeftOrRight(double nextColumnFloat) {
+        return nextColumnFloat < 0 || nextColumnFloat > (numberOfColumns - 1);
     }
 
-    private void changeVerticalDirectionPolarity(int nextRow, Paddle paddle) {
-        if (paddle.getTopRow() == nextRow) verticalDirection = -1;
-        if (paddle.getCenterRow() == nextRow) verticalDirection = 0;
-        if (paddle.getBottomRow() == nextRow) verticalDirection = 1;
-        System.out.println("Changing vertical polarity to: " + verticalDirection);
+    // Checks whether the ball will hit both the top/bottom and left/right sides at the same time
+    private boolean willHitCorner(double nextRowFloat, double nextColumnFloat) {
+        return (nextRowFloat < 5 && nextColumnFloat < 0) 
+        || (nextRowFloat < 5 && nextColumnFloat > (numberOfColumns - 1)) 
+        || (nextRowFloat > (numberOfRows - 1) && nextColumnFloat > (numberOfColumns - 1)) 
+        || (nextColumnFloat < 0 && nextRowFloat > (numberOfRows - 1));
     }
 
-    private boolean willHitVerticalWall(int nextRow) {
-        return nextRow < 0 || nextRow > grid.getNumRows() - 1;
+    // Checks whether the ball will hit the left paddle in its next position
+    private boolean willHitLeftPaddle(double nextRowFloat, double nextColumnFloat) {
+        return nextColumnFloat < 3 && (willCollideWithPaddle(nextRowFloat, nextColumnFloat, paddleOne));    
     }
 
-    private boolean willHitLeftPaddle(int nextRow, int nextColumn) {
-        return horizontalDirection < 0 && nextColumn == leftPaddle.getColumn() && (nextRow >= leftPaddle.getTopRow() - 1 && nextRow <= leftPaddle.getBottomRow() + 1 );
+    // Checks whether the ball will hit the right paddle in its next position
+    private boolean willHitRightPaddle(double nextRowFloat, double nextColumnFloat) {
+        return nextColumnFloat > 66 && (willCollideWithPaddle(nextRowFloat, nextColumnFloat, paddleTwo));
     }
-
-    private boolean willHitRightPaddle(int nextRow, int nextColumn) {
-        return horizontalDirection > 0 && nextColumn == rightPaddle.getColumn() && (nextRow >= rightPaddle.getTopRow() - 1 && nextRow <= rightPaddle.getBottomRow() + 1 );
+    
+    // Checks whether the ball will hit anywhere from the top or bottom corners of a paddle
+    private boolean willCollideWithPaddle(double nextRowFloat, double nextColumnFloat, Paddle paddle) {
+        return nextRowFloat >= paddle.getTopRow() - 1 && nextRowFloat <= paddle.getBottomRow() + 1;
+    }
+    
+    // Move the ball to a new starting position with the randomly generated row number, launch with a random starting angle, and determine who receives the serve
+    public void serveBall(int startingRow, double startingAngle, int player) {
+        this.moveTo(new Location(startingRow, 35));
+        this.rowFloat = startingRow;
+        this.columnFloat = 35;
+        this.startingAngle = startingAngle;
+        computeVelocities(startingAngle, player);
+    }
+    
+    // The trigonometric calculations for determining the rise and run of the ball's movement based on the starting angle
+    public void computeVelocities(double startingAngle, int player) {
+        double radians = Math.toRadians(startingAngle);
+        this.horizontalVelocity = (player == 1) ? -speed*Math.cos(radians) : speed*Math.cos(radians);
+        this.verticalVelocity = -speed*Math.sin(radians);
     }
 }
