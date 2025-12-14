@@ -10,21 +10,6 @@ import java.awt.Color;
  * @author Pasha Loguinov
  * @version 10/25/2025
  * 
- * Has a starting point. 
- * Gets shot towards player one's direction dead-on to start the game.
- * Define the out of bounds coordinates on each side to determine who loses the round.
- * If the ball comes in "contact" with with a paddle perpendicularly, the ball gets returned perpedicularly.
- * If the ball comes in contact diagonally,  
- * 
- * Add continuous position fields (x,y,vx,vy) and a simple act() that moves the ball and updates its grid cell—no collisions.
- * Add top/bottom wall collision.
- * Implement paddle collision with simple vx inversion only.
- * Add offset shaping of vy.
- * Add spin from paddle movement delta.
- * Add speed increases, min horizontal enforcement.
- * Add scoring and reset logic.
- * Add sub-step refinement for higher speeds.
- * Add small vertical perturbation to avoid flat rallies.
  */
 public class Ball extends Actor
 {
@@ -51,63 +36,61 @@ public class Ball extends Actor
     public void act() {
         if (column < 2 || column > 58) return;
 
-        // if (grid.get(new Location(row, column - 1)) instanceof BlackSquare) {
-        // changeVerticalDirectionPolarity(leftPaddle);
-        // horizontalDirection = 1;
-        // } else if (grid.get(new Location(row, column + 1)) instanceof BlackSquare) {
-        // changeVerticalDirectionPolarity(rightPaddle);
-        // horizontalDirection = -1;
-        // } 
+        int nextRow = row + verticalDirection;
+        int nextColumn = column + horizontalDirection;
+        boolean willHitVerticalWall = willHitVerticalWall(nextRow);
+        boolean willHitLeftPaddle = willHitLeftPaddle(nextRow, nextColumn);
+        boolean willHitRightPaddle = willHitRightPaddle(nextRow, nextColumn);
 
-        // if ((grid.get(new Location(row, column - 1)) instanceof BlackSquare && grid.isValid(new Location(row, column - 1))) || (grid.get(new Location(row + 1, column - 1)) instanceof BlackSquare && grid.isValid(new Location(row + 1, column - 1))) || (grid.get(new Location(row - 1, column - 1)) instanceof BlackSquare && grid.isValid(new Location(row - 1, column - 1)))) {
-        // System.out.println("We hit the left paddle!");
-        // changeVerticalDirectionPolarity(leftPaddle);
-        // horizontalDirection = 1;
-        // } else if ((grid.get(new Location(row, column + 1)) instanceof BlackSquare && grid.isValid(new Location(row, column + 1))) || (grid.get(new Location(row + 1, column + 1)) instanceof BlackSquare && grid.isValid(new Location(row + 1, column + 1))) || (grid.get(new Location(row - 1, column + 1)) instanceof BlackSquare && grid.isValid(new Location(row - 1, column + 1)))) {
-        // System.out.println("We hit the right paddle!");
-        // changeVerticalDirectionPolarity(rightPaddle);
-        // horizontalDirection = -1;
-        // } 
-
-        // } else if (wasVerticalWallHit() && (wasTheLeftPaddleHit() || wasTheRightPaddleHit())) {
-        // System.out.println("We hit both the wall and a paddle!");
-
-        if (wasVerticalWallHit()) {
-            System.out.println("We have hit a wall!");
-            verticalDirection = (verticalDirection < 0) ? 1 : -1;
-        } else {
-            if (wasTheLeftPaddleHit()) {
+        if (willHitVerticalWall && (willHitLeftPaddle || willHitRightPaddle)) { // Hitting a corner
+            System.out.println("We hit a corner!");
+            horizontalDirection = -horizontalDirection;
+            verticalDirection = (Math.random() < .5) ? 0 : -verticalDirection;
+            nextRow = row + verticalDirection;
+            nextColumn = column + horizontalDirection;
+        } else if (willHitVerticalWall) { // Hitting a wall
+            System.out.println("We hit a wall!");
+            verticalDirection = (verticalDirection < 0) ? 1 : -1; 
+            nextRow = row + verticalDirection;
+            nextColumn = column + horizontalDirection;
+        } else if (willHitLeftPaddle || willHitRightPaddle) { // Hitting one of the paddles
+            System.out.println("We hit a paddle!");
+            if (willHitLeftPaddle) {
                 System.out.println("We hit the left paddle!");
-                changeVerticalDirectionPolarity(leftPaddle);
+                changeVerticalDirectionPolarity(nextRow, leftPaddle);
                 horizontalDirection = 1;
-            } else if (wasTheRightPaddleHit()) {
+                nextRow = row + verticalDirection;
+                nextColumn = column + horizontalDirection;
+            } else if (willHitRightPaddle) {
                 System.out.println("We hit the right paddle!");
-                changeVerticalDirectionPolarity(rightPaddle);
+                changeVerticalDirectionPolarity(nextRow, rightPaddle);
                 horizontalDirection = -1;
-            } 
+                nextRow = row + verticalDirection;
+                nextColumn = column + horizontalDirection;
+            }
         }
 
-        column += horizontalDirection;
-        row += verticalDirection;
+        column = nextColumn;
+        row = nextRow;
         this.moveTo(new Location(row, column));
     }
 
-    private void changeVerticalDirectionPolarity(Paddle paddle) {
-        if (paddle.getTopRow() == row || paddle.getTopRow() - 1 == row) verticalDirection = -1;
-        if (paddle.getCenterRow() == row) verticalDirection = 0;
-        if (paddle.getBottomRow() == row || paddle.getBottomRow() + 1 == row) verticalDirection = 1;
+    private void changeVerticalDirectionPolarity(int nextRow, Paddle paddle) {
+        if (paddle.getTopRow() == nextRow) verticalDirection = -1;
+        if (paddle.getCenterRow() == nextRow) verticalDirection = 0;
+        if (paddle.getBottomRow() == nextRow) verticalDirection = 1;
         System.out.println("Changing vertical polarity to: " + verticalDirection);
     }
 
-    private boolean wasTheLeftPaddleHit() {
-        return grid.get(new Location(row, column - 1)) instanceof BlackSquare || grid.get(new Location(row + 1, column - 1)) instanceof BlackSquare || grid.get(new Location(row - 1, column - 1)) instanceof BlackSquare; 
+    private boolean willHitVerticalWall(int nextRow) {
+        return nextRow < 0 || nextRow > grid.getNumRows() - 1;
     }
 
-    private boolean wasTheRightPaddleHit() {
-        return grid.get(new Location(row, column + 1)) instanceof BlackSquare || grid.get(new Location(row + 1, column + 1)) instanceof BlackSquare || grid.get(new Location(row - 1, column + 1)) instanceof BlackSquare; 
+    private boolean willHitLeftPaddle(int nextRow, int nextColumn) {
+        return horizontalDirection < 0 && nextColumn == leftPaddle.getColumn() && (nextRow >= leftPaddle.getTopRow() - 1 && nextRow <= leftPaddle.getBottomRow() + 1 );
     }
 
-    private boolean wasVerticalWallHit() {
-        return row + 1 > grid.getNumRows() - 1 || row - 1 < 0;
+    private boolean willHitRightPaddle(int nextRow, int nextColumn) {
+        return horizontalDirection > 0 && nextColumn == rightPaddle.getColumn() && (nextRow >= rightPaddle.getTopRow() - 1 && nextRow <= rightPaddle.getBottomRow() + 1 );
     }
 }
