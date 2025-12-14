@@ -6,7 +6,7 @@ This project implements a classic Pong game using the GridWorld framework in Jav
 
 ## Demo
 
-![Gameplay](docs/demo.gif)
+![Gameplay](docs/pong-demo.gif)
 
 ## Version / Date
 
@@ -27,6 +27,11 @@ December 2025
 1. Clone or download this repository.
 2. Ensure the GridWorld jar is referenced by VS Code:
 
+   - Create a `lib/` folder in the project root and place `gridworld.jar` (from [this link](https://tomrebold.com/csis10a/ch05/GridWorldCode.zip)) inside it:
+     ```
+     mkdir -p lib
+     # copy or download the jar into ./lib/gridworld.jar
+     ```
    - Create a `.vscode/settings.json` in the project root (if it doesn’t exist) and add:
      ```
      {
@@ -47,10 +52,6 @@ December 2025
    ```
    java -cp .:out:lib/gridworld.jar PongWorld
    ```
-   - If you prefer not to include `.`, you can set the image path explicitly:
-     ```
-     java -Dinfo.gridworld.gui.ImagePath=images -cp out:lib/gridworld.jar PongWorld
-     ```
 
 ## Authors
 
